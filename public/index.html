@@ -17,10 +17,7 @@
 		<div class="container" ng-controller="dashboardController as dashboard">
 			<div class="row">
 				<div class="col-lg-2 col-md-3 col-sm-4 col-xs-6" ng-repeat="tile in dashboard.tiles | orderObjectBy: 'order'">
-					<div class="tile {{tile.class}}" ng-click="dashboard.toggleLed(tile.class)">
-						<h3 class="title">{{tile.title}}</h3>
-						<p class="value">{{tile.value}}{{tile.unit}}</p>
-					</div>
+					<dashboard-tile tile="tile" toggle-led="dashboard.toggleLed(color)" />
 				</div>
 			</div>
 		</div>

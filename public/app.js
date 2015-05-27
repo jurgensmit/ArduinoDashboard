@@ -82,4 +82,16 @@
     		return filtered;
   		};
 	});
+	
+	dashboardApp.directive("dashboardTile", function () {
+        return {
+            restrict: "E",
+            template: "<div class='tile {{tile.class}}' ng-click='toggleLed({ color: tile.class })'><h3 class='title'>{{tile.title}}</h3><p class='value'>&nbsp;{{tile.value}}{{tile.unit}}</p></div>",
+            replace: true,
+            scope: {
+                tile: "=",
+                toggleLed: "&"
+            }
+        };
+    });
 }());

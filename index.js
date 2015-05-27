@@ -3,9 +3,7 @@ var SerialPort = serialport.SerialPort;
 
 serialport.list(function (err, ports) {
   ports.forEach(function(port) {
-    console.log(port.comName);
-    console.log(port.pnpId);
-    console.log(port.manufacturer);
+    console.log(port.comName + " - " + port.manufacturer);
   });
 });
 
@@ -15,7 +13,16 @@ var serialPort = new SerialPort("COM7", {
 
 serialPort.on("open", function () {
   serialPort.on("data", function(data) {
-    processData(data.toString());
+    var commands = data.toString().trim().split("\n");
+    commands.forEach(function(command) {
+      //console.log("[" + command.trim() + "]");
+      processData(command.trim());
+    });
+  });
+  
+  // Get the current state of the sensors
+  serialPort.write("X:@", function() {
+    serialPort.drain();
   });
 });
 
@@ -30,58 +37,6 @@ app.use(bodyParser.json());
 
 app.use(express.static(__dirname + "/public"));
 
-io.sockets.on("connection", function(socket) {
-	console.log("Socket io is connected.");
-  
-  socket.on("toggleled", function (data) {
-    switch(data) {
-      case "yellow": toggleYellowLed();
-      break;
-      case "green": toggleGreenLed();
-      break;
-      case "red": toggleRedLed();
-      break;
-    }
-    emitLatestData();
-  });
-});
-
-function toggleYellowLed() {   
-  if(latestData.yellowLedState == "On") {
-    latestData.yellowLedState = "Off";
-  }
-  else {
-    latestData.yellowLedState = "On";
-  }
-  serialPort.write("L:0@", function() {
-    serialPort.drain();
-  });
-}  
-
-function toggleGreenLed() {   
-  if(latestData.greenLedState == "On") {
-    latestData.greenLedState = "Off";
-  }
-  else {
-    latestData.greenLedState = "On";
-  }
-  serialPort.write("L:1@", function() {
-    serialPort.drain();
-  });
-}  
-
-function toggleRedLed() {   
-  if(latestData.redLedState == "On") {
-    latestData.redLedState = "Off";
-  }
-  else {
-    latestData.redLedState = "On";
-  }
-  serialPort.write("L:2@", function() {
-    serialPort.drain();
-  });
-}  
-
 server.listen(port, function() {
   console.log("Listening on " + port);
 });
@@ -89,10 +44,44 @@ server.listen(port, function() {
 app.get("/arduino/data", function(request, response) {
   console.log("Request for data");
   response.json({
-    data: {
-      distance: latestData
-    }});
+    data: latestData
+  });
 });
+
+io.sockets.on("connection", function(socket) {
+	console.log("Socket io is connected.");
+  
+  socket.on("toggleled", function (color) {
+    switch(color) {
+      case "yellow": toggleYellowLed();
+      break;
+      case "green": toggleGreenLed();
+      break;
+      case "red": toggleRedLed();
+      break;
+    }
+  });
+
+  emitLatestData();
+});
+
+function toggleYellowLed() {   
+  serialPort.write("L:0@", function() {
+    serialPort.drain();
+  });
+}  
+
+function toggleGreenLed() {   
+  serialPort.write("L:1@", function() {
+    serialPort.drain();
+  });
+}  
+
+function toggleRedLed() {   
+  serialPort.write("L:2@", function() {
+    serialPort.drain();
+  });
+}  
 
 function processData(data) {
   if(data.length > 1 && data.substr(1, 1) == ":") {
@@ -108,6 +97,9 @@ function processData(data) {
       case "A": // Angle
         processAngle(parameters);
         break; 
+      case "L": // Led status
+        processLedStatus(parameters);
+        break; 
     }
   }
 }
@@ -119,18 +111,39 @@ var latestData = {
 };
 
 function processDistance(distance) {
-  latestData.distance = parseFloat(distance);
+  latestData.distance = parseInt(distance);
   emitLatestData();
 }
 
 function processTemperature(temperature) {
-  latestData.temperature = parseFloat(temperature);
+  latestData.temperature = parseInt(temperature);
   emitLatestData();
 }
 
 function processAngle(angle) {
-  latestData.angle = parseFloat(angle);
+  latestData.angle = parseInt(angle);
   emitLatestData();
+}
+
+function processLedStatus(parameters) {
+  if(parameters.length === 2) {
+    var ledIndex = parseInt(parameters.substr(0, 1));
+    var ledStatus = parseInt(parameters.substr(1, 1));
+    
+    switch(ledIndex) {
+      case 0:
+        latestData.yellowLedState = ledStatus ? "On" : "Off";
+        break;
+      case 1:
+        latestData.greenLedState = ledStatus ? "On" : "Off";
+        break;
+      case 2:
+        latestData.redLedState = ledStatus ? "On" : "Off";
+        break;
+    }    
+    
+    emitLatestData();
+  }
 }
 
 function emitLatestData() {
