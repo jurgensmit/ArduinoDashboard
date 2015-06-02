@@ -97,6 +97,9 @@ function processData(data) {
       case "A": // Angle
         processAngle(parameters);
         break; 
+      case "P": // Photoresistor
+        processLight(parameters);
+        break; 
       case "L": // Led status
         processLedStatus(parameters);
         break; 
@@ -112,6 +115,11 @@ var latestData = {
 
 function processDistance(distance) {
   latestData.distance = parseInt(distance);
+  emitLatestData();
+}
+
+function processLight(light) {
+  latestData.light = parseInt(light);
   emitLatestData();
 }
 

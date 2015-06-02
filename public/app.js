@@ -16,14 +16,17 @@
 			angle: {
 				order: 3, title: "Angle"
 			},
+			light: {
+				order: 4, title: "Light"
+			},
 			redLed: {
-				order: 4, title: "Red Led",	class: "red"
+				order: 5, title: "Red Led",	class: "red"
 			},
 			yellowLed: {
-				order: 5, title: "Yellow Led", class: "yellow"
+				order: 6, title: "Yellow Led", class: "yellow"
 			},
 			greenLed: {
-				order: 6, title: "Green Led", class: "green"
+				order: 7, title: "Green Led", class: "green"
 			}
 		};
 			
@@ -31,6 +34,7 @@
 			vm.tiles.temperature.value = data.temperature;
 			vm.tiles.distance.value = data.distance;
 			vm.tiles.angle.value = data.angle;
+			vm.tiles.light.value = data.light;
 			vm.tiles.redLed.value = data.redLedState;
 			vm.tiles.yellowLed.value = data.yellowLedState;
 			vm.tiles.greenLed.value = data.greenLedState;
